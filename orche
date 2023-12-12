@@ -1,0 +1,44 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
+import time
+
+def clicar_em_ponto_por_nome(driver, nome_contato):
+    for _ in range(5):  # Tentar 5 vezes
+        try:
+            WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'div[data-tab="3"] span[title]'))
+            )
+
+            resultados = driver.find_elements(By.CSS_SELECTOR, 'div[data-tab="3"] span[title]')
+
+            resultado = next((resultado for resultado in resultados if nome_contato.lower() in resultado.get_attribute('title').lower()), None)
+
+            if resultado:
+                try:
+                    driver.execute_script("arguments[0].click();", resultado)
+                    return  
+                except Exception as e:
+                    print(f"Erro ao clicar: {e}")
+            else:
+                print(f"Contato '{nome_contato}' não encontrado.")
+        except TimeoutException:
+            print("Exceção TimeoutException. Tentando novamente.")
+        except StaleElementReferenceException:
+            print("Exceção StaleElementReferenceException. Tentando novamente.")
+
+    print("Não foi possível encontrar o contato após várias tentativas.")
+
+driver = webdriver.Chrome()
+driver.get("https://web.whatsapp.com")
+
+input("Escaneie o código QR e pressione Enter.")
+
+nome_contato = "Wesley Alagoas"
+
+clicar_em_ponto_por_nome(driver, nome_contato)
+
+time.sleep(10)
+driver.quit()
